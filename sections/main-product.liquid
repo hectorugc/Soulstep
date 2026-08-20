@@ -74,6 +74,10 @@
 
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
   <product-component view-event-payload="{{ product | standard_event_data: 'view', context: 'page' | escape }}">
+    <div style="background: linear-gradient(90deg, #FFC107, #FFD54F); padding: 0.7rem 1rem; text-align: center; letter-spacing: 0.08em;">
+      <span style="font-size: 0.85rem; font-weight: 700; color: #1a1a1a; text-transform: uppercase;">Buy 3 pairs: 4th is FREE!</span>
+      <span style="font-size: 0.85rem; color: #1a1a1a; margin-left: 0.4rem;">— mix &amp; match any style</span>
+    </div>
     <div class="page-width">
       <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
         <div class="grid__item product__media-wrapper">
