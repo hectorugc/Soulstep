@@ -15,6 +15,64 @@
   .drawer {
     visibility: hidden;
   }
+
+  .free-shipping-bar {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .free-shipping-bar__track {
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+  }
+
+  .free-shipping-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFC107, #FFD54F);
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+
+  .free-shipping-bar__message {
+    font-size: 0.875rem;
+    margin: 0 0 0.15rem;
+    color: #1a1a1a;
+  }
+
+  .free-shipping-bar__message strong {
+    font-weight: 700;
+  }
+
+  .free-shipping-bar__goal {
+    font-size: 0.78rem;
+    color: #888;
+    margin: 0;
+    text-align: center;
+  }
+
+  .free-shipping-bar--unlocked .free-shipping-bar__message {
+    text-align: center;
+    font-weight: 600;
+    color: #2d7a2d;
+  }
+
+  .free-shipping-bar__bundle-nudge {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    color: #555;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    padding: 0.45rem 0.75rem;
+    line-height: 1.4;
+  }
+
+  .free-shipping-bar__bundle-nudge strong {
+    color: #E07020;
+  }
 </style>
 
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
@@ -88,6 +146,39 @@
           method="post"
         >
           <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
+            {%- assign free_shipping_threshold = 4000 -%}
+            {%- assign remaining_cents = free_shipping_threshold | minus: cart.total_price -%}
+            {%- assign progress_pct = cart.total_price | times: 100 | divided_by: free_shipping_threshold -%}
+            {%- assign is_bundle = false -%}
+            {%- for item in cart.items -%}
+              {%- if item.properties._bundle_id != blank -%}{%- assign is_bundle = true -%}{%- endif -%}
+            {%- endfor -%}
+            {%- if cart != empty -%}
+              <div style="padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.08);">
+                <div style="height: 12px; background: #e5e7eb; border-radius: 99px; overflow: hidden; margin-bottom: 0.6rem;">
+                  <div style="width: {{ progress_pct }}%; height: 12px; background: linear-gradient(90deg, #FFC107, #FFD54F); border-radius: 99px; display: block;"></div>
+                </div>
+                {%- if remaining_cents > 0 -%}
+                  <p style="font-size: 0.875rem; margin: 0 0 0.15rem; color: #1a1a1a;">
+                    <strong>{{ cart.total_price | money }}</strong> — Add {{ remaining_cents | money }} more to unlock Free Shipping!
+                  </p>
+                  {%- unless is_bundle -%}
+                    <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #555; background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 0.45rem 0.75rem; line-height: 1.4;">
+                      💡 Buy 3 pairs and get a <strong style="color:#E07020;">4th pair free</strong> + <strong style="color:#E07020;">Free Shipping</strong> — mix &amp; match any style!
+                    </p>
+                  {%- endunless -%}
+                {%- else -%}
+                  {%- if is_bundle -%}
+                    <p style="font-size: 0.875rem; margin: 0; text-align: center; font-weight: 600; color: #2d7a2d;">🎉 Free Shipping unlocked + 4th pair free at checkout!</p>
+                  {%- else -%}
+                    <p style="font-size: 0.875rem; margin: 0 0 0.5rem; text-align: center; font-weight: 600; color: #2d7a2d;">🎉 Free Shipping unlocked!</p>
+                    <p style="margin: 0; font-size: 0.8rem; color: #555; background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 0.45rem 0.75rem; line-height: 1.4;">
+                      💡 Buy 3 pairs and get a <strong style="color:#E07020;">4th pair free</strong> — mix &amp; match any style!
+                    </p>
+                  {%- endif -%}
+                {%- endif -%}
+              </div>
+            {%- endif -%}
             {%- if cart != empty -%}
               <div class="drawer__cart-items-wrapper">
                 <table class="cart-items" role="table">
