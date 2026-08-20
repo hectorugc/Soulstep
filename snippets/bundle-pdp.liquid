@@ -1,0 +1,682 @@
+{% doc %}
+  Renders the Buy 3 Get 1 Free bundle widget inside the product info column.
+
+  @param {object} block - The section block object; provides block.shopify_attributes and block.settings
+  @param {object} section - The parent section object (passed for context, settings read from block)
+
+  Block settings expected:
+    - block.settings.collection        {collection} The mix & match collection
+    - block.settings.price_per_pair    {number}     Price per pair in cents (default 2199)
+    - block.settings.heading           {string}     Banner heading text
+    - block.settings.show_build_note   {boolean}    Whether to show the developer build note
+{% enddoc %}
+
+<div
+  class="bundle-pdp"
+  data-collection-handle="{{ block.settings.collection.handle | default: '' }}"
+  data-price-per-pair="{{ block.settings.price_per_pair | default: 2199 }}"
+  {{ block.shopify_attributes }}
+>
+
+  {%- comment -%} Yellow offer banner {%- endcomment -%}
+  <div class="bundle-pdp__banner">
+    {{ block.settings.heading | default: '🎉 Buy 3, get a 4th pair free — mix & match any style Footsouls' }}
+  </div>
+
+  {%- comment -%} Pricing toggle {%- endcomment -%}
+  <div class="bundle-pdp__pricing-toggle" role="group" aria-label="Purchase option">
+    <button
+      class="bundle-pdp__pricing-card bundle-pdp__pricing-card--active"
+      data-mode="bundle"
+      aria-pressed="true"
+    >
+      <span class="bundle-pdp__badge">Best value</span>
+      <span class="bundle-pdp__pricing-card-title">Buy 3, Get 1 Free</span>
+      <span class="bundle-pdp__pricing-card-sub">Mix &amp; match any style — save $21.99</span>
+    </button>
+    <button
+      class="bundle-pdp__pricing-card"
+      data-mode="single"
+      aria-pressed="false"
+    >
+      <span class="bundle-pdp__pricing-card-title">Just one pair</span>
+      <span class="bundle-pdp__pricing-card-price">$21.99</span>
+    </button>
+  </div>
+
+  {%- comment -%} Size mode toggle {%- endcomment -%}
+  <div class="bundle-pdp__size-mode-wrap bundle-pdp__section--bundle-only">
+    <div class="bundle-pdp__size-toggle" role="group" aria-label="Size mode">
+      <button class="bundle-pdp__size-btn bundle-pdp__size-btn--active" data-size-mode="same" aria-pressed="true">Same size for all</button>
+      <button class="bundle-pdp__size-btn" data-size-mode="per-pair" aria-pressed="false">Choose size per pair</button>
+    </div>
+    <p class="bundle-pdp__size-note">Style is always your choice per pair — this only controls sizing</p>
+  </div>
+
+  {%- comment -%} 4 pair slots {%- endcomment -%}
+  <div class="bundle-pdp__slots">
+    {%- for i in (1..4) -%}
+      {%- assign is_free = false -%}
+      {%- if i == 4 -%}{%- assign is_free = true -%}{%- endif -%}
+      <div
+        class="bundle-pdp__slot{% if is_free %} bundle-pdp__slot--free{% endif %}{% if i > 1 %} bundle-pdp__section--bundle-only{% endif %}"
+        data-pair="{{ i }}"
+      >
+        <div class="bundle-pdp__slot-header">
+          <span class="bundle-pdp__slot-label{% if is_free %} bundle-pdp__slot-label--free{% endif %}">
+            Pair {{ i }}{% if is_free %} (Free){% endif %}
+          </span>
+          <span class="bundle-pdp__slot-price{% if is_free %} bundle-pdp__slot-price--free{% endif %}">
+            {%- if is_free -%}$0.00{%- else -%}$21.99{%- endif -%}
+          </span>
+        </div>
+        <div class="bundle-pdp__slot-fields">
+          <select class="bundle-pdp__select bundle-pdp__style-select" aria-label="Style for pair {{ i }}">
+            <option value="">Loading styles…</option>
+          </select>
+          <div class="bundle-pdp__size-field" data-pair-size="{{ i }}">
+            <select class="bundle-pdp__select bundle-pdp__size-select" aria-label="Size for pair {{ i }}">
+              <option value="">Select size</option>
+            </select>
+            <span class="bundle-pdp__synced-label" style="display:none;"></span>
+          </div>
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+
+  {%- comment -%} Order summary {%- endcomment -%}
+  <div class="bundle-pdp__summary bundle-pdp__section--bundle-only">
+    <div class="bundle-pdp__summary-row">
+      <span>Subtotal (4 pairs)</span>
+      <span data-summary="subtotal">$87.96</span>
+    </div>
+    <div class="bundle-pdp__summary-row bundle-pdp__summary-row--savings">
+      <span>Bundle savings</span>
+      <span data-summary="savings">-$21.99</span>
+    </div>
+    <div class="bundle-pdp__summary-row bundle-pdp__summary-row--total">
+      <span>Order total</span>
+      <span data-summary="total">$65.97</span>
+    </div>
+  </div>
+
+  {%- comment -%} Add to cart button {%- endcomment -%}
+  <div class="bundle-pdp__cta-wrap">
+    <button class="bundle-pdp__add-btn" data-add-btn>Add Bundle to Cart</button>
+    <p class="bundle-pdp__cta-note bundle-pdp__section--bundle-only">Lowest-priced pair auto-applies free at checkout</p>
+  </div>
+
+  {%- comment -%} Build note {%- endcomment -%}
+  {%- if block.settings.show_build_note -%}
+  <div class="bundle-pdp__build-note">
+    <small>Each slot is posted as its own line item with a <code>_bundle_id</code> property so fulfilment can group them. The lowest-price variant is discounted server-side.</small>
+  </div>
+  {%- endif -%}
+
+</div>
+
+{% stylesheet %}
+.bundle-pdp {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: inherit;
+  color: #1a1a1a;
+}
+
+/* Banner */
+.bundle-pdp__banner {
+  background: #FFC107;
+  color: #1a1a1a;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+/* Pricing toggle */
+.bundle-pdp__pricing-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.bundle-pdp__pricing-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+  font-size: inherit;
+}
+
+.bundle-pdp__pricing-card--active {
+  border-color: #E07020;
+}
+
+.bundle-pdp__pricing-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.bundle-pdp__pricing-card-sub,
+.bundle-pdp__pricing-card-price {
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.bundle-pdp__badge {
+  display: inline-block;
+  background: #E07020;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Size mode toggle */
+.bundle-pdp__size-mode-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.bundle-pdp__size-toggle {
+  display: inline-flex;
+  background: #f3f4f6;
+  border-radius: 30px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.bundle-pdp__size-btn {
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 30px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+  transition: background 0.15s, color 0.15s;
+}
+
+.bundle-pdp__size-btn--active {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.bundle-pdp__size-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #888;
+}
+
+/* Pair slots */
+.bundle-pdp__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.bundle-pdp__slot {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  background: #fff;
+}
+
+.bundle-pdp__slot--free {
+  border-color: #E07020;
+}
+
+.bundle-pdp__slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.bundle-pdp__slot-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.bundle-pdp__slot-label--free {
+  color: #E07020;
+}
+
+.bundle-pdp__slot-price {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.bundle-pdp__slot-price--free {
+  color: #E07020;
+  font-weight: 600;
+}
+
+.bundle-pdp__slot-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bundle-pdp__select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.bundle-pdp__synced-label {
+  font-size: 0.82rem;
+  color: #555;
+  padding: 0.4rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+/* Order summary */
+.bundle-pdp__summary {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  background: #fff;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bundle-pdp__summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.bundle-pdp__summary-row--savings {
+  color: #E07020;
+}
+
+.bundle-pdp__summary-row--total {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* CTA */
+.bundle-pdp__cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.bundle-pdp__add-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #E07020;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.bundle-pdp__add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bundle-pdp__cta-note {
+  font-size: 0.78rem;
+  color: #888;
+  text-align: center;
+  margin: 0;
+}
+
+/* Build note */
+.bundle-pdp__build-note {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.78rem;
+  color: #888;
+  background: #fafafa;
+}
+
+/* Hidden utility */
+.bundle-pdp--hidden {
+  display: none !important;
+}
+{% endstylesheet %}
+
+{% javascript %}
+(function () {
+  'use strict';
+
+  const root = document.querySelector('.bundle-pdp');
+  if (!root) return;
+
+  const collectionHandle = root.dataset.collectionHandle || '';
+  const pricePerPair = parseInt(root.dataset.pricePerPair || '2199', 10);
+
+  // --- State ---
+  let purchaseMode = 'bundle'; // 'bundle' | 'single'
+  let sizeMode = 'same';       // 'same' | 'per-pair'
+  let products = [];           // [{title, handle}]
+  // Per-pair state
+  const pairState = [1, 2, 3, 4].map(() => ({
+    variantId: null,
+    variantPrice: pricePerPair,
+    variants: [],
+    sizeIndex: 0
+  }));
+
+  // --- DOM helpers ---
+  function qs(selector, parent) {
+    return (parent || root).querySelector(selector);
+  }
+  function qsa(selector, parent) {
+    return Array.from((parent || root).querySelectorAll(selector));
+  }
+
+  const pricingCards = qsa('[data-mode]');
+  const sizeBtns = qsa('[data-size-mode]');
+  const bundleOnlyEls = qsa('.bundle-pdp__section--bundle-only');
+  const addBtn = qs('[data-add-btn]');
+  const slotEls = qsa('.bundle-pdp__slot');
+
+  // --- Fetch products from collection ---
+  async function loadProducts() {
+    if (!collectionHandle) return;
+    try {
+      const res = await fetch('/collections/' + collectionHandle + '/products.json?limit=50');
+      if (!res.ok) return;
+      const data = await res.json();
+      products = (data.products || []).map(function (p) {
+        return { title: p.title, handle: p.handle };
+      });
+      slotEls.forEach(function (slot, i) {
+        populateStyleDropdown(slot, i);
+      });
+    } catch (_) {}
+  }
+
+  function populateStyleDropdown(slot, pairIndex) {
+    const select = qs('.bundle-pdp__style-select', slot);
+    if (!select) return;
+    select.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose a style…';
+    select.appendChild(placeholder);
+    products.forEach(function (p) {
+      const opt = document.createElement('option');
+      opt.value = p.handle;
+      opt.textContent = p.title;
+      select.appendChild(opt);
+    });
+    // Pre-select first product
+    if (products.length > 0) {
+      select.value = products[0].handle;
+      loadVariants(slot, pairIndex, products[0].handle);
+    }
+  }
+
+  async function loadVariants(slot, pairIndex, handle) {
+    if (!handle) return;
+    try {
+      const res = await fetch('/products/' + handle + '.js');
+      if (!res.ok) return;
+      const product = await res.json();
+      const variants = product.variants || [];
+      pairState[pairIndex].variants = variants;
+      populateSizeDropdown(slot, pairIndex, variants);
+    } catch (_) {}
+  }
+
+  function populateSizeDropdown(slot, pairIndex, variants) {
+    const sizeField = qs('.bundle-pdp__size-field', slot);
+    const select = qs('.bundle-pdp__size-select', slot);
+    if (!select) return;
+    select.innerHTML = '';
+    variants.forEach(function (v, idx) {
+      const opt = document.createElement('option');
+      opt.value = String(v.id);
+      opt.textContent = v.title;
+      opt.dataset.index = String(idx);
+      opt.dataset.price = String(v.price);
+      select.appendChild(opt);
+    });
+    if (variants.length > 0) {
+      pairState[pairIndex].variantId = variants[0].id;
+      pairState[pairIndex].variantPrice = variants[0].price;
+      pairState[pairIndex].sizeIndex = 0;
+    }
+    updateSyncedLabels();
+    updateSummary();
+  }
+
+  // --- Sync labels for "same size" mode ---
+  function updateSyncedLabels() {
+    if (sizeMode !== 'same') return;
+    const pair0 = pairState[0];
+    const refVariants = pair0.variants;
+    const refIndex = pair0.sizeIndex;
+    const refLabel = refVariants[refIndex] ? refVariants[refIndex].title : '';
+
+    slotEls.forEach(function (slot, i) {
+      const synced = qs('.bundle-pdp__synced-label', slot);
+      const sizeSelect = qs('.bundle-pdp__size-select', slot);
+      if (i === 0) {
+        if (synced) synced.style.display = 'none';
+        if (sizeSelect) sizeSelect.style.display = '';
+        return;
+      }
+      // Sync by position
+      const pVariants = pairState[i].variants;
+      const targetIndex = Math.min(refIndex, pVariants.length - 1);
+      if (targetIndex >= 0 && pVariants[targetIndex]) {
+        pairState[i].variantId = pVariants[targetIndex].id;
+        pairState[i].variantPrice = pVariants[targetIndex].price;
+        pairState[i].sizeIndex = targetIndex;
+        if (sizeSelect) sizeSelect.value = String(pVariants[targetIndex].id);
+      }
+      const syncLabel = refLabel || 'N/A';
+      if (synced) {
+        synced.textContent = 'Size synced: ' + syncLabel;
+        synced.style.display = '';
+      }
+      if (sizeSelect) sizeSelect.style.display = 'none';
+    });
+  }
+
+  function applySizeMode() {
+    slotEls.forEach(function (slot, i) {
+      const synced = qs('.bundle-pdp__synced-label', slot);
+      const sizeSelect = qs('.bundle-pdp__size-select', slot);
+      if (sizeMode === 'same' && i > 0) {
+        if (synced) synced.style.display = '';
+        if (sizeSelect) sizeSelect.style.display = 'none';
+      } else {
+        if (synced) synced.style.display = 'none';
+        if (sizeSelect) sizeSelect.style.display = '';
+      }
+    });
+    if (sizeMode === 'same') updateSyncedLabels();
+  }
+
+  // --- Order summary ---
+  function formatMoney(cents) {
+    return '$' + (cents / 100).toFixed(2);
+  }
+
+  function updateSummary() {
+    if (purchaseMode !== 'bundle') return;
+    const subtotalEl = qs('[data-summary="subtotal"]');
+    const savingsEl = qs('[data-summary="savings"]');
+    const totalEl = qs('[data-summary="total"]');
+    const subtotalCents = pricePerPair * 4;
+    // Savings = price of the cheapest pair (pair 4 is free)
+    const freePairPrice = pairState[3].variantPrice || pricePerPair;
+    const totalCents = subtotalCents - freePairPrice;
+    if (subtotalEl) subtotalEl.textContent = formatMoney(subtotalCents);
+    if (savingsEl) savingsEl.textContent = '-' + formatMoney(freePairPrice);
+    if (totalEl) totalEl.textContent = formatMoney(totalCents);
+  }
+
+  // --- Purchase mode ---
+  function applyPurchaseMode() {
+    bundleOnlyEls.forEach(function (el) {
+      if (purchaseMode === 'bundle') {
+        el.classList.remove('bundle-pdp--hidden');
+      } else {
+        el.classList.add('bundle-pdp--hidden');
+      }
+    });
+    if (purchaseMode === 'bundle') {
+      addBtn.textContent = 'Add Bundle to Cart';
+    } else {
+      addBtn.textContent = 'Add to Cart';
+    }
+    updateSummary();
+  }
+
+  // --- Add to cart ---
+  async function addToCart() {
+    addBtn.disabled = true;
+    const originalText = addBtn.textContent;
+    addBtn.textContent = 'Adding…';
+
+    const bundleId = 'bundle-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+
+    let items;
+    if (purchaseMode === 'bundle') {
+      items = pairState.map(function (ps) {
+        return {
+          id: ps.variantId,
+          quantity: 1,
+          properties: { _bundle_id: bundleId }
+        };
+      }).filter(function (item) { return item.id; });
+
+      if (items.length < 4) {
+        alert('Please select a style and size for all 4 pairs.');
+        addBtn.disabled = false;
+        addBtn.textContent = originalText;
+        return;
+      }
+    } else {
+      const firstVariantId = pairState[0].variantId;
+      if (!firstVariantId) {
+        alert('Please select a style and size.');
+        addBtn.disabled = false;
+        addBtn.textContent = originalText;
+        return;
+      }
+      items = [{ id: firstVariantId, quantity: 1 }];
+    }
+
+    try {
+      const res = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items })
+      });
+      if (!res.ok) throw new Error('Cart add failed');
+
+      // Notify theme cart systems
+      document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
+      // Try to open cart drawer if available
+      document.dispatchEvent(new CustomEvent('cart:open', { bubbles: true }));
+
+      addBtn.textContent = 'Added!';
+      setTimeout(function () {
+        addBtn.disabled = false;
+        addBtn.textContent = originalText;
+      }, 2000);
+    } catch (err) {
+      addBtn.disabled = false;
+      addBtn.textContent = originalText;
+      alert('Could not add to cart. Please try again.');
+    }
+  }
+
+  // --- Event listeners ---
+  pricingCards.forEach(function (card) {
+    card.addEventListener('click', function () {
+      purchaseMode = card.dataset.mode;
+      pricingCards.forEach(function (c) {
+        c.classList.toggle('bundle-pdp__pricing-card--active', c.dataset.mode === purchaseMode);
+        c.setAttribute('aria-pressed', String(c.dataset.mode === purchaseMode));
+      });
+      applyPurchaseMode();
+    });
+  });
+
+  sizeBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      sizeMode = btn.dataset.sizeMode;
+      sizeBtns.forEach(function (b) {
+        b.classList.toggle('bundle-pdp__size-btn--active', b.dataset.sizeMode === sizeMode);
+        b.setAttribute('aria-pressed', String(b.dataset.sizeMode === sizeMode));
+      });
+      applySizeMode();
+    });
+  });
+
+  slotEls.forEach(function (slot, pairIndex) {
+    const styleSelect = qs('.bundle-pdp__style-select', slot);
+    const sizeSelect = qs('.bundle-pdp__size-select', slot);
+
+    if (styleSelect) {
+      styleSelect.addEventListener('change', function () {
+        loadVariants(slot, pairIndex, styleSelect.value);
+      });
+    }
+
+    if (sizeSelect) {
+      sizeSelect.addEventListener('change', function () {
+        const selectedOpt = sizeSelect.options[sizeSelect.selectedIndex];
+        const idx = parseInt(selectedOpt ? selectedOpt.dataset.index || '0' : '0', 10);
+        pairState[pairIndex].variantId = parseInt(sizeSelect.value, 10);
+        pairState[pairIndex].variantPrice = parseInt(
+          (selectedOpt ? selectedOpt.dataset.price : String(pricePerPair)) || String(pricePerPair),
+          10
+        );
+        pairState[pairIndex].sizeIndex = idx;
+        if (sizeMode === 'same' && pairIndex === 0) {
+          updateSyncedLabels();
+        }
+        updateSummary();
+      });
+    }
+  });
+
+  addBtn.addEventListener('click', addToCart);
+
+  // --- Init ---
+  loadProducts();
+  applyPurchaseMode();
+})();
+{% endjavascript %}
